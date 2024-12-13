@@ -792,5 +792,32 @@ body[data-theme="light"] .search-box button {
   color: #000000;
 }
 
+.featured-header {
+    grid-column: 1 / -1;
+    margin-bottom: 16px;
+}
+
+.featured-header h2 {
+    color: inherit;
+    font-size: 24px;
+    margin: 0;
+    padding: 0 0 8px 0;
+    border-bottom: 2px solid #333;
+}
+
+body[data-theme="light"] .featured-header h2 {
+    border-bottom-color: #ddd;
+}
+
+/* Update video-item styles for light theme */
+body[data-theme="light"] .video-item {
+    background: #f5f5f5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body[data-theme="light"] .video-item h3 {
+    color: #333;
+}
+
 
 

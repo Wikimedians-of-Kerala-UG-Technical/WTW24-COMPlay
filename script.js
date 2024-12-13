@@ -438,6 +438,79 @@ let player = new Player(
   document.getElementById("time_range")
 );
 
+// Add this new function to fetch featured videos
+async function loadFeaturedVideos() {
+    const searchResults = document.getElementById('searchResults');
+    searchResults.innerHTML = '<div class="spinner"></div>';
+    
+    try {
+        // Fetch some featured/popular video categories
+        const categories = [
+            'Nature videos',
+            'Documentary videos',
+            'Educational videos',
+            'Science videos',
+            'Space videos'
+        ];
+        
+        // Randomly select one category
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        
+        const response = await fetch(`https://commons.wikimedia.org/w/api.php?` +
+            `action=query&` +
+            `format=json&` +
+            `generator=search&` +
+            `gsrnamespace=6&` +
+            `gsrsearch=filetype:video ${randomCategory}&` +
+            `gsrlimit=12&` + // Limit to 12 videos
+            `prop=imageinfo&` +
+            `iiprop=url|mediatype|size|mime|thumburl&` +
+            `iiurlwidth=250&` +
+            `origin=*`
+        );
+
+        const data = await response.json();
+        searchResults.innerHTML = `
+            <div class="featured-header">
+                <h2>Featured ${randomCategory}</h2>
+            </div>
+        `;
+
+        if (!data.query || !data.query.pages) {
+            searchResults.innerHTML += '<p>No videos found. Try searching above.</p>';
+            return;
+        }
+
+        Object.values(data.query.pages)
+            .filter(page => {
+                const imageInfo = page.imageinfo?.[0];
+                return imageInfo && imageInfo.mime?.startsWith('video/');
+            })
+            .forEach(page => {
+                const imageInfo = page.imageinfo[0];
+                const thumbnailUrl = imageInfo.thumburl || 
+                    `https://commons.wikimedia.org/w/thumb.php?width=250&f=${encodeURIComponent(page.title.replace('File:', ''))}`;
+                
+                const videoItem = document.createElement('div');
+                videoItem.className = 'video-item';
+                videoItem.innerHTML = `
+                    <div class="thumbnail-container">
+                        <img src="${thumbnailUrl}" 
+                             onerror="this.src='./play.png'" 
+                             alt="${page.title}">
+                    </div>
+                    <h3>${page.title.replace('File:', '').replace(/\.(webm|ogv|mp4)$/i, '')}</h3>
+                `;
+                videoItem.onclick = () => playVideo(imageInfo.url, page.title);
+                searchResults.appendChild(videoItem);
+            });
+
+    } catch (error) {
+        console.error('Error loading featured videos:', error);
+        searchResults.innerHTML = '<p>Error loading featured videos</p>';
+    }
+}
+
 // on document ready
 $(function () {
   const urlParams = new URLSearchParams(window.location.search);
@@ -447,6 +520,9 @@ $(function () {
   // Initially hide the video container
   $('#video_container').hide();
 
+  // Add this line near the beginning of the function
+  loadFeaturedVideos();
+  
   if (
     movieUrl != "null" &&
     movieUrl != null &&
