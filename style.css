@@ -678,3 +678,47 @@ input#volume::-moz-range-thumb {
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
+/* General Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #121212; /* Default dark background */
+  color: #ffffff; /* Default light text */
+}
+
+body[data-theme="light"] {
+  background-color: #ffffff; /* Light background */
+  color: #000000; /* Dark text for light mode */
+}
+
+/* Theme toggle button */
+#themeToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit; /* Inherit the text color based on the theme */
+  font-size: 24px;
+  padding: 10px;
+  position: fixed; /* Position the button in a fixed location */
+  top: 10px;
+  right: 10px;
+  z-index: 1000; /* Ensure it appears on top of all elements */
+}
+
+#themeToggle:hover {
+  opacity: 0.8; /* Optional hover effect */
+}
+
+/* Search Container Styles */
+#searchContainer {
+  padding: 20px;
+  background-color: #1e1e1e; /* Default dark mode */
+  color: #ffffff; /* Default text color in dark mode */
+}
+
+body[data-theme="light"] #searchContainer {
+  background-color: #f0f0f0; /* Light mode background */
+  color: #000000; /* Text color for light mode */
+}
+
+

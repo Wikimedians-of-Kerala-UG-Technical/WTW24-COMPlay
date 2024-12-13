@@ -918,6 +918,41 @@ document.addEventListener('click', function(e) {
     }
 });
 
+
+// JavaScript for theme toggle
+function toggleTheme() {
+  const body = document.body;
+  const themeIcon = document.getElementById("themeIcon");
+
+  // Toggle between dark and light modes
+  if (body.getAttribute("data-theme") === "light") {
+    body.setAttribute("data-theme", "dark");
+    localStorage.setItem("theme", "dark"); // Save the theme preference
+    themeIcon.classList.replace("fa-sun", "fa-moon"); // Use moon icon for dark mode
+  } else {
+    body.setAttribute("data-theme", "light");
+    localStorage.setItem("theme", "light"); // Save the theme preference
+    themeIcon.classList.replace("fa-moon", "fa-sun"); // Use sun icon for light mode
+  }
+}
+
+// Initialize theme based on saved preference
+document.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme") || "dark"; // Default to dark mode
+  document.body.setAttribute("data-theme", savedTheme);
+
+  // Set the appropriate icon
+  const themeIcon = document.getElementById("themeIcon");
+  if (savedTheme === "light") {
+    themeIcon.classList.replace("fa-moon", "fa-sun");
+  }
+});
+
+// Attach the toggle function to the button
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+
+
 // Add keyboard navigation for suggestions
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
     const suggestions = document.getElementById('searchSuggestions');
