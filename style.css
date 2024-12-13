@@ -684,6 +684,7 @@ body[data-theme="light"] {
   background-color: #ffffff; /* Light mode background */
   color: #000000; /* Light mode text */
 }
+
 #navbar {
   width: 100%;
   position: fixed; /* Fix the navbar to the top of the page */
@@ -702,6 +703,11 @@ body[data-theme="light"] {
 body[data-theme="light"] #navbar {
   background-color: #f0f0f0; /* Light mode background */
   color: #000000; /* Text color for light mode */
+}
+
+
+.hide-navbar {
+  display: none; /* Hide the navbar */
 }
 
 #navContent {

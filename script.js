@@ -531,7 +531,9 @@ $(function () {
   ) {
     // If URL is provided, hide search and show video
     $('#searchContainer').hide();
+    $('#navbar').hide();
     $('#video_container').show();
+    document.body.style.paddingTop='0';
     
     player = new Player(
       movieUrl,
@@ -889,7 +891,8 @@ function playVideo(videoUrl, title) {
   // Hide search container and show video player
   document.getElementById('searchContainer').style.display = 'none';
   document.getElementById('video_container').style.display = 'flex';
-
+  document.getElementById('navbar').style.display='none';
+  document.body.style.paddingTop='0';
   // Clear any existing interval
   if (window.time_interval) {
     clearInterval(window.time_interval);
@@ -915,7 +918,9 @@ document.getElementById('return').onclick = function() {
     // Show search container and hide video player
     document.getElementById('searchContainer').style.display = 'block';
     document.getElementById('video_container').style.display = 'none';
-    
+    document.getElementById('navbar').style.display='flex';
+    document.body.style.paddingTop='60px';
+
     // Stop the current video and clear its source
     if (player && player.video) {
         player.video.pause();
@@ -986,6 +991,7 @@ async function getSuggestions(query) {
         console.error('Error getting suggestions:', error);
     }
 }
+
 
 // Close suggestions when clicking outside
 document.addEventListener('click', function(e) {
