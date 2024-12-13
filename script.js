@@ -952,7 +952,30 @@ document.addEventListener("DOMContentLoaded", () => {
 // Attach the toggle function to the button
 document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
+// Function to start voice search
+function startVoiceSearch() {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert('Voice search is not supported in this browser.');
+    return;
+  }
 
+  const recognition = new webkitSpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const voiceQuery = event.results[0][0].transcript.trim();
+    document.getElementById('searchInput').value = voiceQuery;  // Populate the input field
+    searchVideos();  // Call search function
+  };
+
+  recognition.onerror = function(event) {
+    console.error("Speech recognition error", event);
+  };
+}
 
 // Add keyboard navigation for suggestions
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
