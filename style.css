@@ -561,14 +561,6 @@ input#volume::-moz-range-thumb {
   position: relative;
 }
 
-#searchInput {
-  flex: 1;
-  padding: 8px 16px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  background: #2a2a2a;
-  color: white;
-}
 
 .search-box button {
   padding: 8px 16px;
@@ -681,44 +673,124 @@ input#volume::-moz-range-thumb {
 /* General Styles */
 body {
   margin: 0;
+  padding: 0;
   font-family: Arial, sans-serif;
-  background-color: #121212; /* Default dark background */
-  color: #ffffff; /* Default light text */
+  background-color: #121212; /* Default dark mode background */
+  color: #ffffff; /* Default dark mode text */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
 }
 
 body[data-theme="light"] {
-  background-color: #ffffff; /* Light background */
-  color: #000000; /* Dark text for light mode */
+  background-color: #ffffff; /* Light mode background */
+  color: #000000; /* Light mode text */
+}
+#navbar {
+  width: 100%;
+  position: fixed; /* Fix the navbar to the top of the page */
+  top: 0;
+  left: 0;
+  background-color: #1e1e1e; /* Default dark background */
+  color: #ffffff; /* Text color for dark mode */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  z-index: 1000; /* Ensure it appears above other content */
 }
 
-/* Theme toggle button */
+body[data-theme="light"] #navbar {
+  background-color: #f0f0f0; /* Light mode background */
+  color: #000000; /* Text color for light mode */
+}
+
+#navContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+#navHeading {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: inherit; /* Use the text color based on the theme */
+}
+
 #themeToggle {
   background: none;
   border: none;
   cursor: pointer;
-  color: inherit; /* Inherit the text color based on the theme */
+  color: inherit;
   font-size: 24px;
   padding: 10px;
-  position: fixed; /* Position the button in a fixed location */
-  top: 10px;
-  right: 10px;
-  z-index: 1000; /* Ensure it appears on top of all elements */
+}
+
+body {
+  margin: 0;
+  padding-top: 60px; /* Add padding equal to the navbar height */
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: #ffffff;
 }
 
 #themeToggle:hover {
   opacity: 0.8; /* Optional hover effect */
 }
 
-/* Search Container Styles */
+/* Search Container */
 #searchContainer {
+  margin-top: 70px; /* Offset for fixed navbar */
   padding: 20px;
-  background-color: #1e1e1e; /* Default dark mode */
-  color: #ffffff; /* Default text color in dark mode */
+  background-color: #1e1e1e; /* Default dark mode background */
+  color: #ffffff; /* Default dark mode text */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body[data-theme="light"] #searchContainer {
-  background-color: #f0f0f0; /* Light mode background */
-  color: #000000; /* Text color for light mode */
+  background-color: #f8f9fa; /* Light mode background */
+  color: #000000; /* Light mode text */
 }
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-box input {
+  padding: 10px;
+  width: calc(100% - 120px); /* Adjust width to accommodate the button */
+  margin-right: 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #333; /* Dark mode background for input */
+  color: #fff;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body[data-theme="light"] .search-box input {
+  background-color: #ffffff; /* Light mode background for input */
+  color: #000000;
+  border: 1px solid #ddd;
+}
+
+.search-box button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #555; /* Dark mode background for button */
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body[data-theme="light"] .search-box button {
+  background-color: #dddddd; /* Light mode background for button */
+  color: #000000;
+}
+
 
 

@@ -936,6 +936,7 @@ function toggleTheme() {
   }
 }
 
+
 // Initialize theme based on saved preference
 document.addEventListener("DOMContentLoaded", () => {
   const savedTheme = localStorage.getItem("theme") || "dark"; // Default to dark mode
