@@ -689,7 +689,7 @@ body[data-theme="light"] {
   position: fixed; /* Fix the navbar to the top of the page */
   top: 0;
   left: 0;
-  background-color: #1e1e1e; /* Default dark background */
+  background:linear-gradient(45deg, #00b4d8, #9b2c5a); /* Default dark background */
   color: #ffffff; /* Text color for dark mode */
   display: flex;
   justify-content: space-between;
