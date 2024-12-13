@@ -17,6 +17,8 @@ class Player {
     this.source = document.querySelector("source");
     this.timeCount = timeCount;
     this.timeRange = timeRange;
+    this.qualities = [];
+    this.currentQuality = 'Auto';
 
     // Reset error state
     $("#errorContainer").text("");
@@ -47,6 +49,12 @@ class Player {
     this.videoUrl = url;
     this.source.src = url;
     this.video.load();
+    
+    // Detect available qualities for Wikimedia videos
+    if (url.includes('wikimedia.org')) {
+      this.detectWikimediaQualities(url);
+    }
+    
     handlePlayerError(this.video);
   }
 
@@ -287,6 +295,139 @@ class Player {
     $("#center_btn").stop(true, false).fadeToggle(animationDuration);
     $("#dimmBg").stop(true, false).fadeToggle(animationDuration);
     $("#video_header").stop(true, false).fadeToggle(animationDuration);
+  }
+
+  toggleQualityMenu() {
+    const existingMenu = document.getElementById('qualityMenu');
+    if (existingMenu) {
+      existingMenu.remove();
+      return;
+    }
+
+    const menu = document.createElement('div');
+    menu.id = 'qualityMenu';
+    menu.style.cssText = `
+      position: absolute;
+      bottom: 60px;
+      right: 50px;
+      background: rgba(28, 28, 28, 0.9);
+      border-radius: 4px;
+      padding: 8px 0;
+      z-index: 10;
+    `;
+
+    // Add Auto quality option
+    const autoOption = this.createQualityOption('Auto', this.currentQuality === 'Auto');
+    menu.appendChild(autoOption);
+
+    // Add available qualities
+    this.qualities.forEach(quality => {
+      const option = this.createQualityOption(quality.label, this.currentQuality === quality.label);
+      menu.appendChild(option);
+    });
+
+    document.getElementById('video_container').appendChild(menu);
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#qualityMenu') && !e.target.closest('#videoQuality')) {
+        menu.remove();
+      }
+    }, { once: true });
+  }
+
+  createQualityOption(label, isActive) {
+    const option = document.createElement('div');
+    option.style.cssText = `
+      padding: 8px 16px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      ${isActive ? 'background: rgba(255, 255, 255, 0.1);' : ''}
+    `;
+    option.innerHTML = `
+      ${isActive ? '<i class="fa-solid fa-check" style="color: #ffffff;"></i>' : ''}
+      <span>${label}</span>
+    `;
+    option.onclick = () => this.changeQuality(label);
+    return option;
+  }
+
+  changeQuality(quality) {
+    const currentTime = this.video.currentTime;
+    const isPaused = this.video.paused;
+    
+    if (quality === 'Auto') {
+      // Reset to original source
+      this.setSource(this.videoUrl);
+    } else {
+      // Find the selected quality source
+      const selectedQuality = this.qualities.find(q => q.label === quality);
+      if (selectedQuality) {
+        this.setSource(selectedQuality.url);
+      }
+    }
+
+    // Update quality indicator
+    this.currentQuality = quality;
+    document.getElementById('currentQuality').textContent = quality;
+    
+    // Remove quality menu
+    const menu = document.getElementById('qualityMenu');
+    if (menu) menu.remove();
+
+    // Restore playback state
+    this.video.addEventListener('loadedmetadata', () => {
+      this.video.currentTime = currentTime;
+      if (!isPaused) this.video.play();
+    }, { once: true });
+  }
+
+  // Add method to detect Wikimedia video qualities
+  async detectWikimediaQualities(url) {
+    try {
+      // Extract the filename from the URL
+      const filename = url.split('/').pop().split('?')[0];
+      
+      // Fetch video info from Wikimedia API
+      const response = await fetch(`https://commons.wikimedia.org/w/api.php?` +
+        `action=query&` +
+        `titles=File:${filename}&` +
+        `prop=videoinfo&` +
+        `viprop=derivatives&` +
+        `format=json&` +
+        `origin=*`
+      );
+
+      const data = await response.json();
+      const page = Object.values(data.query.pages)[0];
+      
+      if (page.videoinfo && page.videoinfo[0].derivatives) {
+        // Create a Map to store unique qualities based on height
+        const qualityMap = new Map();
+        
+        page.videoinfo[0].derivatives
+          .filter(d => d.type.startsWith('video/'))
+          .forEach(d => {
+            const height = d.height;
+            // Only store the first occurrence of each height
+            if (!qualityMap.has(height)) {
+              qualityMap.set(height, {
+                label: `${height}p`,
+                url: d.src
+              });
+            }
+          });
+
+        // Convert Map values to array and sort by height (descending)
+        this.qualities = Array.from(qualityMap.values())
+          .sort((a, b) => parseInt(b.label) - parseInt(a.label));
+      }
+    } catch (error) {
+      console.error('Error detecting video qualities:', error);
+    }
   }
 }
 
