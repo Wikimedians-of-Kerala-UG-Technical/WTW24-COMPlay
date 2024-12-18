@@ -46,13 +46,35 @@ class Player {
   }
 
   setSource(url) {
+    console.log('Setting source:', url);
     this.videoUrl = url;
-    this.source.src = url;
+    
+    // Create a new source element
+    const oldSource = this.video.querySelector('source');
+    if (oldSource) {
+        oldSource.remove();
+    }
+    
+    const source = document.createElement('source');
+    source.src = url;
+    this.video.appendChild(source);
+    
+    // Add error handling
+    this.video.addEventListener('error', (e) => {
+        console.error('Video error:', {
+            error: this.video.error,
+            event: e,
+            networkState: this.video.networkState,
+            readyState: this.video.readyState
+        });
+        // Try to recover from error
+        this.recoverFromError();
+    }, { once: true });
+    
     this.video.load();
     
-    // Detect available qualities for Wikimedia videos
     if (url.includes('wikimedia.org')) {
-      this.detectWikimediaQualities(url);
+        this.detectWikimediaQualities(url);
     }
     
     handlePlayerError(this.video);
@@ -358,75 +380,109 @@ class Player {
   changeQuality(quality) {
     const currentTime = this.video.currentTime;
     const isPaused = this.video.paused;
+    const volume = this.video.volume;
     
-    if (quality === 'Auto') {
-      // Reset to original source
-      this.setSource(this.videoUrl);
-    } else {
-      // Find the selected quality source
-      const selectedQuality = this.qualities.find(q => q.label === quality);
-      if (selectedQuality) {
-        this.setSource(selectedQuality.url);
-      }
+    try {
+        if (quality === 'Auto') {
+            this.setSource(this.videoUrl);
+        } else {
+            const selectedQuality = this.qualities.find(q => q.label === quality);
+            if (selectedQuality) {
+                console.log(`Switching to quality: ${quality}`, selectedQuality);
+                this.setSource(selectedQuality.url);
+            }
+        }
+
+        // Update quality indicator
+        this.currentQuality = quality;
+        document.getElementById('currentQuality').textContent = quality;
+        
+        // Remove quality menu
+        const menu = document.getElementById('qualityMenu');
+        if (menu) menu.remove();
+
+        // Restore playback state
+        this.video.addEventListener('loadedmetadata', () => {
+            this.video.currentTime = currentTime;
+            this.video.volume = volume;
+            if (!isPaused) {
+                this.video.play().catch(error => {
+                    console.error('Error resuming playback:', error);
+                });
+            }
+        }, { once: true });
+
+    } catch (error) {
+        console.error('Error changing quality:', error);
+        if (quality !== 'Auto') {
+            this.changeQuality('Auto');
+        }
     }
-
-    // Update quality indicator
-    this.currentQuality = quality;
-    document.getElementById('currentQuality').textContent = quality;
-    
-    // Remove quality menu
-    const menu = document.getElementById('qualityMenu');
-    if (menu) menu.remove();
-
-    // Restore playback state
-    this.video.addEventListener('loadedmetadata', () => {
-      this.video.currentTime = currentTime;
-      if (!isPaused) this.video.play();
-    }, { once: true });
   }
 
-  // Add method to detect Wikimedia video qualities
+  // Modify the detectWikimediaQualities method
   async detectWikimediaQualities(url) {
     try {
-      // Extract the filename from the URL
-      const filename = url.split('/').pop().split('?')[0];
-      
-      // Fetch video info from Wikimedia API
-      const response = await fetch(`https://commons.wikimedia.org/w/api.php?` +
-        `action=query&` +
-        `titles=File:${filename}&` +
-        `prop=videoinfo&` +
-        `viprop=derivatives&` +
-        `format=json&` +
-        `origin=*`
-      );
-
-      const data = await response.json();
-      const page = Object.values(data.query.pages)[0];
-      
-      if (page.videoinfo && page.videoinfo[0].derivatives) {
-        // Create a Map to store unique qualities based on height
-        const qualityMap = new Map();
+        const filename = url.split('/').pop().split('?')[0];
         
-        page.videoinfo[0].derivatives
-          .filter(d => d.type.startsWith('video/'))
-          .forEach(d => {
-            const height = d.height;
-            // Only store the first occurrence of each height
-            if (!qualityMap.has(height)) {
-              qualityMap.set(height, {
-                label: `${height}p`,
-                url: d.src
-              });
-            }
-          });
+        const response = await fetch(`https://commons.wikimedia.org/w/api.php?` +
+            `action=query&` +
+            `titles=File:${filename}&` +
+            `prop=videoinfo&` +
+            `viprop=derivatives|url|mime|size|mediatype&` +
+            `format=json&` +
+            `origin=*`
+        );
 
-        // Convert Map values to array and sort by height (descending)
-        this.qualities = Array.from(qualityMap.values())
-          .sort((a, b) => parseInt(b.label) - parseInt(a.label));
-      }
+        const data = await response.json();
+        const page = Object.values(data.query.pages)[0];
+        
+        if (page.videoinfo && page.videoinfo[0].derivatives) {
+            const qualityMap = new Map();
+            
+            // Add Auto quality
+            qualityMap.set('auto', {
+                label: 'Auto',
+                url: this.videoUrl,
+                height: 0
+            });
+
+            // Process all available qualities, excluding those below 240p
+            page.videoinfo[0].derivatives
+                .filter(d => {
+                    return d.type && 
+                           d.type.startsWith('video/') && 
+                           d.src &&
+                           d.height >= 240; // Only include 240p and higher
+                })
+                .forEach(d => {
+                    const height = d.height;
+                    // Only add each resolution once
+                    if (!qualityMap.has(height)) {
+                        qualityMap.set(height, {
+                            label: `${height}p`,
+                            url: d.src,
+                            height: height
+                        });
+                    }
+                });
+
+            // Convert to array and sort by height
+            this.qualities = Array.from(qualityMap.values())
+                .sort((a, b) => b.height - a.height);
+
+            console.log('Available qualities:', this.qualities);
+        }
     } catch (error) {
-      console.error('Error detecting video qualities:', error);
+        console.error('Error detecting video qualities:', error);
+    }
+  }
+
+  // Add a method to recover from errors
+  recoverFromError() {
+    if (this.currentQuality !== 'Auto') {
+        console.log('Attempting recovery by switching to Auto quality');
+        this.changeQuality('Auto');
     }
   }
 }
@@ -918,16 +974,30 @@ document.getElementById('return').onclick = function() {
     // Show search container and hide video player
     document.getElementById('searchContainer').style.display = 'block';
     document.getElementById('video_container').style.display = 'none';
-    document.getElementById('navbar').style.display='flex';
-    document.body.style.paddingTop='60px';
+    document.getElementById('navbar').style.display = 'flex';
+    document.body.style.paddingTop = '60px';
 
-    // Stop the current video and clear its source
+    // Stop the current video and clean up properly
     if (player && player.video) {
+        // Pause the video
         player.video.pause();
+        
+        // Reset time and clear source
         player.video.currentTime = 0;
         player.source.src = '';
-        player.video.removeAttribute('src'); // Remove src attribute
+        player.video.removeAttribute('src');
+        
+        // Remove all source elements
+        while (player.video.firstChild) {
+            player.video.removeChild(player.video.firstChild);
+        }
+        
+        // Load to apply changes
         player.video.load();
+        
+        // Reset the player state
+        player.qualities = [];
+        player.currentQuality = 'Auto';
     }
 
     // Clear error message and spinner
